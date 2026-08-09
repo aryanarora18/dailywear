@@ -81,6 +81,15 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 .runs .rc{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 13px;cursor:pointer}
 .runs .rc.on{background:var(--accent);border-color:var(--accent);color:#fff8f3}
 .tip{margin:8px 22px 0;font-size:13.5px;color:var(--mut);font-style:italic;display:none}
+
+.notif{margin:22px 22px 0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:0 2px 14px var(--shadow)}
+.notif h4{font-size:15px;margin:0 0 6px;font-weight:650}
+.notif p{font-size:13.5px;color:var(--mut);line-height:1.6;margin:0 0 10px}
+.nbtn{width:100%;background:var(--accent);color:var(--onaccent);border:none;border-radius:12px;padding:12px;font:600 15px -apple-system,system-ui,sans-serif;cursor:pointer}
+.nbtn.off{background:var(--card);color:var(--mut);border:1px solid var(--line)}
+.nsteps{font-size:14px;line-height:1.7}
+.nsteps b{color:var(--accent)}
+.nprivacy{margin-top:10px;font-size:11.5px;color:var(--mut);line-height:1.5}
 </style>
 </head>
 <body>
@@ -100,6 +109,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
     <div class="plan" id="plan"></div>
     <button class="cta" onclick="go('today')">See today's full picture ›</button>
     <div class="ctasub">forecast · what everyone's wearing · photos</div>
+    <div class="notif" id="notifCard" style="display:none">
+      <h4>The 7:40 morning note ☀️</h4>
+      <div id="notifBody"></div>
+      <div class="nprivacy">No account. No email. No name. We store one thing: this device's anonymous
+      delivery address — turning notifications off deletes it.</div>
+    </div>
   </div>
   <div class="foot">we count outfits, never faces</div>
 </div>
@@ -250,7 +265,46 @@ function paintTip(){
 document.querySelectorAll('.runs .rc').forEach(c => c.onclick = () => {
   localStorage.setItem('dw_runs', c.dataset.r); paintTip();
 });
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+const PUSH_PUB = "BAriN3-3eBJsieSywyMDDdUOjEdStS0CiyQyFfTXbScrYzAHNEHNu0yxudVwL8f9TlJvyj2cYW7MLbtgCo2I5AA";
+function b64ToU8(s){const p='='.repeat((4-s.length%4)%4);const r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(r,c=>c.charCodeAt(0));}
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+async function paintNotif(){
+  const card = document.getElementById('notifCard');
+  const body = document.getElementById('notifBody');
+  card.style.display = 'block';
+  const pushable = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  if(!pushable){
+    if(isIOS && !standalone){
+      body.innerHTML = '<div class="nsteps">Two quick steps:<br><b>1.</b> Tap the Share button below, then <b>Add to Home Screen</b>.<br><b>2.</b> Open <b>DailyWear</b> from your home screen and tap the button that appears here.</div>';
+    } else {
+      body.innerHTML = '<p>This browser cannot do notifications — try Chrome or Safari.</p>';
+    }
+    return;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if(sub && Notification.permission === 'granted'){
+    body.innerHTML = '<button class="nbtn off" id="nbtn">Morning notes are on — tap to turn off</button>';
+    document.getElementById('nbtn').onclick = async () => {
+      await fetch(API_BASE + '/api/unsubscribe', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({endpoint: sub.endpoint})}).catch(()=>{});
+      await sub.unsubscribe();
+      paintNotif();
+    };
+  } else {
+    body.innerHTML = '<button class="nbtn" id="nbtn">Turn on morning notes</button>';
+    document.getElementById('nbtn').onclick = async () => {
+      try{
+        const perm = await Notification.requestPermission();
+        if(perm !== 'granted'){ paintNotif(); return; }
+        const s = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64ToU8(PUSH_PUB)});
+        await fetch(API_BASE + '/api/subscribe', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({subscription: s.toJSON()})});
+        paintNotif();
+      }catch(e){ body.innerHTML = '<p>Could not turn on notifications: ' + esc(e.message) + '</p>'; }
+    };
+  }
+}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').then(()=>paintNotif()).catch(()=>{});
 loadToday();
 </script>
 </body>
