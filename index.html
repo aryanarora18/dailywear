@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DailyWear — what NYC is actually wearing</title>
-<meta name="description" content="What New York is actually wearing right now, read from the city's own street cameras — so you know what to put on before you leave.">
+<meta name="description" content="What New York is actually wearing right now, read from the city's own street cameras, so you know what to put on before you leave.">
 <meta name="theme-color" content="#faf5ee">
 <meta name="apple-mobile-web-app-title" content="DailyWear">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,8 +31,8 @@ body{-webkit-text-size-adjust:100%;background:var(--bg);color:var(--text);font:1
 .sub b{color:var(--text);font-weight:650}
 .cta{display:block;margin:30px 22px 0;background:var(--accent);color:var(--onaccent);text-align:center;text-decoration:none;border-radius:16px;padding:15px;font-weight:650;font-size:16px;border:none;width:calc(100% - 44px);cursor:pointer;font-family:inherit;box-shadow:0 8px 24px var(--shadow)}
 .ctasub{margin-top:10px;text-align:center;font-size:12.5px;color:var(--mut)}
-.back{padding:14px 22px 0;font-size:14px}
-.back a{color:var(--accent);text-decoration:none;font-weight:600;cursor:pointer}
+.back{padding:14px 22px 0}
+.back a{display:inline-flex;align-items:center;gap:4px;background:var(--card);border:1.5px solid var(--accent);color:var(--accent);border-radius:99px;padding:9px 20px;font-size:14.5px;font-weight:650;text-decoration:none;cursor:pointer;box-shadow:0 2px 10px var(--shadow)}
 .wx{margin:18px 22px 0;background:var(--wxbg);border:1px solid var(--wxline);border-radius:20px;padding:14px 18px 12px;color:var(--wxtext)}
 .wxhead{font-size:11px;letter-spacing:.8px;color:var(--wxmut);font-weight:600}
 .wxmain{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
@@ -127,7 +127,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 
 <div id="vToday" class="view">
   <div class="top"><div class="brand">DailyWear</div><div class="when" id="when2"></div></div>
-  <div class="back"><a onclick="go('home')">‹ back</a></div>
+  <div class="back"><a onclick="go('home')">‹ Home</a></div>
 
   <div class="wx">
     <div class="wxhead">THE OFFICIAL FORECAST</div>
@@ -177,12 +177,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 
   <div class="sec">make this better?</div>
   <div class="fb" id="fbCard">
-    <p>This little site is brand new. Tell us what would make it part of your morning — what's missing, what's confusing, what you'd change.</p>
+    <p>This little site is brand new. Tell us what would make it part of your morning: what's missing, what's confusing, what you'd change.</p>
     <textarea id="fbText" placeholder="Be honest — we can take it…"></textarea>
     <button onclick="fbThanks()">Send it over</button>
   </div>
 
-  <div class="foot"><em>How this works:</em> we glance at the city's public street cameras and count outfits — never faces, never individuals. Just the city, dressing itself, every morning.</div>
+  <div class="foot"><em>How this works:</em> we glance at the city's public street cameras and count outfits. Never faces, never individuals. Just the city, dressing itself, every morning.</div>
 </div>
 
 </div>
@@ -196,7 +196,7 @@ function go(v){
 function fbThanks(){
   var t=document.getElementById('fbText').value;
   try{localStorage.setItem('dailywear_fb_'+Date.now(), t);}catch(e){}
-  document.getElementById('fbCard').innerHTML='<p class="fbdone">Got it — thank you! We read every single one. 💌</p>';
+  document.getElementById('fbCard').innerHTML='<p class="fbdone">Got it. Thank you! We read every single one. 💌</p>';
 }
 var now=new Date();
 var opts={weekday:'long',hour:'numeric',minute:'2-digit'};
@@ -255,7 +255,7 @@ function fbThanks(){
   var t = document.getElementById('fbText').value;
   if(API_BASE){ fetch(API_BASE + "/api/feedback", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({text:t})}).catch(()=>{}); }
   else { try{ localStorage.setItem('dailywear_fb_' + Date.now(), t); }catch(e){} }
-  document.getElementById('fbCard').innerHTML = '<p class="fbdone">Got it — thank you! We read every single one. 💌</p>';
+  document.getElementById('fbCard').innerHTML = '<p class="fbdone">Got it. Thank you! We read every single one. 💌</p>';
 }
 function paintTip(){
   const r = localStorage.getItem('dw_runs') || 'normal';
@@ -263,8 +263,8 @@ function paintTip(){
   const tip = document.getElementById('tip');
   if(r === 'normal' || !window._implied){ tip.style.display = 'none'; return; }
   tip.textContent = r === 'cold'
-    ? "You run cold - take the street's advice and add one light layer."
-    : "You run hot - you can probably go one layer lighter than the street.";
+    ? "You run cold. Add one light layer to whatever the street says."
+    : "You run hot. You can probably go one layer lighter than the street.";
   tip.style.display = 'block';
 }
 document.querySelectorAll('.runs .rc').forEach(c => c.onclick = () => {
@@ -303,7 +303,7 @@ function expandNotif(){
   } else if(isIOS && !standalone){
     body.innerHTML = '<div class="nsteps">Two quick steps on iPhone:<br><b>1.</b> Tap the Share button, then <b>Add to Home Screen</b>.<br><b>2.</b> Open <b>DailyWear</b> from your home screen and tap the button that appears here.</div>';
   } else {
-    body.innerHTML = '<p>This browser cannot do notifications — try Chrome, or Safari on your phone.</p>';
+    body.innerHTML = '<p>This browser cannot do notifications. Try Chrome, or Safari on your phone.</p>';
   }
 }
 async function notifOn(){
