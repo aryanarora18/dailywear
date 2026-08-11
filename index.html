@@ -94,12 +94,15 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 .ncta b{color:var(--accent)}
 .nmini{margin:16px 22px 0;text-align:center;font-size:12.5px;color:var(--mut)}
 .nmini a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:600}
+
+#ptr{display:none;text-align:center;padding:10px 0 0;font-size:13px;color:var(--accent);font-weight:600}
 </style>
 </head>
 <body>
 
 
 <div class="phone">
+<div id="ptr">↻ getting the latest…</div>
 
 <div id="vHome" class="view on">
 <div class="homewrap">
@@ -198,11 +201,12 @@ function fbThanks(){
   try{localStorage.setItem('dailywear_fb_'+Date.now(), t);}catch(e){}
   document.getElementById('fbCard').innerHTML='<p class="fbdone">Got it. Thank you! We read every single one. 💌</p>';
 }
-var now=new Date();
-var opts={weekday:'long',hour:'numeric',minute:'2-digit'};
-var s=now.toLocaleString('en-US',opts).replace(',',',');
-document.getElementById('when1').textContent=s;
-document.getElementById('when2').textContent=s;
+function updateWhen(){
+  var s=new Date().toLocaleString('en-US',{weekday:'long',hour:'numeric',minute:'2-digit'});
+  document.getElementById('when1').textContent=s;
+  document.getElementById('when2').textContent=s;
+}
+updateWhen();
 </script>
 
 
@@ -330,6 +334,21 @@ async function notifOff(){
   paintNotif();
 }
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').then(()=>paintNotif()).catch(()=>{});
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden){ updateWhen(); loadToday(); paintNotif(); }
+});
+setInterval(() => { updateWhen(); loadToday(); }, 10 * 60 * 1000);
+let ptrY = null;
+document.addEventListener('touchstart', e => { ptrY = window.scrollY === 0 ? e.touches[0].clientY : null; }, {passive: true});
+document.addEventListener('touchmove', e => {
+  if(ptrY !== null && e.touches[0].clientY - ptrY > 80){
+    ptrY = null;
+    const el = document.getElementById('ptr');
+    el.style.display = 'block';
+    updateWhen();
+    Promise.resolve(loadToday()).finally(() => setTimeout(() => { el.style.display = 'none'; }, 700));
+  }
+}, {passive: true});
 loadToday();
 </script>
 </body>
