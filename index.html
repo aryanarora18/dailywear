@@ -213,9 +213,11 @@ async function loadToday(){
   if(!API_BASE) return;
   try{
     const d = await (await fetch(API_BASE + "/api/today", {cache:"no-store"})).json();
-    document.getElementById('hello').textContent = d.hello;
-    document.getElementById('verdict').innerHTML = d.verdict_html;
-    document.getElementById('sub').innerHTML = d.sub_html;
+    const hr = new Date().getHours();
+    const night = (hr >= 20 || hr < 6) && d.night;
+    document.getElementById('hello').textContent = night ? d.night.hello : d.hello;
+    document.getElementById('verdict').innerHTML = night ? d.night.verdict_html : d.verdict_html;
+    document.getElementById('sub').innerHTML = night ? d.night.sub_html : d.sub_html;
     if(d.weather){
       document.getElementById('wxtemp').textContent = d.weather.now_temp + "°";
       document.getElementById('wxcond').innerHTML = esc(d.weather.cond) + " · feels like <b>" + d.weather.feels + "°</b>";
@@ -223,7 +225,8 @@ async function loadToday(){
       document.getElementById('wxissue').textContent = d.weather.issue;
     }
     const planEl = document.getElementById('plan');
-    if(d.plan){ planEl.textContent = d.plan; planEl.style.display = 'block'; }
+    const planTxt = night ? d.night.plan : d.plan;
+    if(planTxt){ planEl.textContent = planTxt; planEl.style.display = 'block'; }
     const adv = document.getElementById('advisories');
     if(d.advisories && d.advisories.length){
       adv.innerHTML = d.advisories.map(a => '<div class="adv">' + esc(a) + '</div>').join('');
@@ -245,7 +248,7 @@ async function loadToday(){
           return '<div class="pbox" style="top:' + t + '%;left:' + l + '%;height:' + (btm-t) + '%;width:' + (r-l) + '%"></div>' +
                  '<div class="ptag" style="top:' + ty + '%;left:' + l + '%">' + esc(b.label) + '</div>';
         }).join('');
-        return '<div class="cam"><div class="imgwrap"><img src="' + API_BASE + '/api/frame/' + c.cam_id + '" alt="street camera">' + boxes + '</div>' +
+        return '<div class="cam"><div class="imgwrap"><img src="' + API_BASE + '/api/frame/' + c.cam_id + '" alt="street camera" onerror="this.closest(\'.cam\').style.display=\'none\'">' + boxes + '</div>' +
                '<div class="cap"><b>' + esc(c.name) + '</b>' + c.people + ' people out · ' + new Date(d.generated_at).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) + '</div></div>';
       }).join('');
     }
